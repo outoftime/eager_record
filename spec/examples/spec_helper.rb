@@ -19,7 +19,10 @@ require File.join(File.dirname(__FILE__), '..', '..', 'rails', 'init.rb')
 
 Spec::Runner.configure do |config|
   config.before :all do
+    stdout, stderr = $stdout, $stderr
+    $stdout = $stderr = StringIO.new
     require File.join(File.dirname(__FILE__), '..', 'schema.rb')
+    $stdout, $stderr = stdout, stderr
     Dir.glob(File.join(File.dirname(__FILE__), '..', 'support', 'models', '*.rb')).each do |model|
       require(model)
     end

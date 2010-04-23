@@ -41,9 +41,10 @@ module EagerRecord
       if !loaded? and (!@owner.new_record? || foreign_key_present)
         if originating_collection = @owner.instance_variable_get(:@originating_collection)
           #XXX STI classes seem to have trouble preloading associations -- need to look into this more.
-          if @owner.class.reflect_on_association(@reflection.name)
-            @owner.class.__send__(:preload_associations, originating_collection, @reflection.name)
-            return @target if @target
+          association_name = @reflection.name
+          if @owner.class.reflect_on_association(association_name)
+            @owner.class.__send__(:preload_associations, originating_collection, association_name)
+            return @target if loaded?
           end
         end
       end
@@ -62,12 +63,8 @@ module EagerRecord
       if !@owner.new_record? || foreign_key_present
         if !loaded?
           if originating_collection = @owner.instance_variable_get(:@originating_collection)
-            #XXX need to deal with case of new records in collection
             @owner.class.__send__(:preload_associations, originating_collection, @reflection.name)
-            if target
-              loaded
-              return target
-            end
+            return target if loaded?
           end
         end
       end
