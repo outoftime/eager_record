@@ -97,10 +97,4 @@ describe EagerRecord do
       @blogs[1].posts[0].comments.should == @comments[4..5]
     end
   end
-
-  private
-
-  def fail_on_select
-    ActiveRecord::Base.connection.should_not_receive :select_all
-  end
 end

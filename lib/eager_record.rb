@@ -1,5 +1,6 @@
 require 'rubygems'
 require 'active_record'
+require 'digest'
 
 module EagerRecord
   class <<self
@@ -56,6 +57,7 @@ module EagerRecord
     def self.included(base)
       base.module_eval do
         alias_method_chain :load_target, :eager_preloading
+        alias_method_chain :find, :eager_preloading
       end
     end
 
@@ -69,6 +71,37 @@ module EagerRecord
         end
       end
       load_target_without_eager_preloading
+    end
+
+    # 
+    # Because of some likely unintentional plumbing in the scoping/association
+    # delegation chain, current_scoped_methods returns an association proxy's
+    # scope when called on the association collection. This means that, among
+    # other things, a named scope called on an association collection will
+    # duplicate the association collection's SQL restriction.
+    #
+    def current_scoped_methods
+      @reflection.klass.__send__(:current_scoped_methods)
+    end
+
+    def find_with_eager_preloading(*args)
+      options = args.extract_options!
+      options_digest = Digest::SHA1.hexdigest(options.inspect)[0..7]
+      association_name = :"_preloadable_association_collection_#{options_digest}s"
+      if false #FIXME options already exist
+      else
+        @owner.class.has_many(
+          association_name,
+          @reflection.options.merge(current_scoped_methods[:find]).merge(
+            :class_name => @reflection.klass.name,
+            :readonly => true
+          )
+        )
+      end
+      if originating_collection = @owner.instance_variable_get(:@originating_collection)
+        @owner.class.__send__(:preload_associations, originating_collection, association_name)
+      end
+      @owner.__send__(association_name)
     end
   end
 end
