@@ -14,4 +14,8 @@ ActiveRecord::Schema.define do
     t.references :post
     t.references :user
   end
+  create_table :assets, :force => true do |t|
+    t.references :post
+    t.string :type
+  end
 end

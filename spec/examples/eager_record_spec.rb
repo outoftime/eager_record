@@ -8,12 +8,15 @@ describe EagerRecord do
         post = blog.posts.create!
         2.times { post.comments.create! }
         2.times { post.users.create! }
+        2.times { post.assets << Photo.create!(:post_id => post.id) }
+        2.times { post.assets << Video.create!(:post_id => post.id) }
       end
     end
     @blogs = Blog.all
     @posts = Post.all
     @comments = Comment.all
     @users = User.all
+    @assets = Asset.all
   end
 
   describe 'with has_many' do
@@ -54,19 +57,9 @@ describe EagerRecord do
       fail_on_select
       @comments.last.post.should be_nil
     end
-
-    it 'should not attempt to reload association if broken' do
-      pending 'getting this to work'
-      Comment.create! { |c| c.post_id = 0 }
-      @comments = Comment.all
-      @comments[0].post.inspect
-      fail_on_select
-      @comments.last.post.should be_nil
-    end
   end
 
   describe 'with has_many :through association' do
-
     it 'should eager load second-level collection' do
       @blogs.first.comments.inspect
       fail_on_select
@@ -95,6 +88,12 @@ describe EagerRecord do
       @blogs[0].posts[0].comments.inspect
       fail_on_select
       @blogs[1].posts[0].comments.should == @comments[4..5]
+    end
+  end
+
+  describe 'collection with STI' do
+    it 'should eager-load associated instances without error' do
+      lambda { @assets[0].post }.should_not raise_error
     end
   end
 end

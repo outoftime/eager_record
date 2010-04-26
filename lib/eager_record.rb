@@ -27,9 +27,12 @@ module EagerRecord
 
       def find_by_sql_with_eager_preloading(*args)
         collection = find_by_sql_without_eager_preloading(*args)
-        if collection.length > 1
-          collection.each do |record|
-            record.instance_variable_set(:@originating_collection, collection)
+        grouped_collections = collection.group_by { |record| record.class }
+        grouped_collections.values.each do |grouped_collection|
+          if grouped_collection.length > 1
+            grouped_collection.each do |record|
+              record.instance_variable_set(:@originating_collection, grouped_collection)
+            end
           end
         end
         collection
@@ -66,12 +69,9 @@ module EagerRecord
 
       if !loaded? and (!@owner.new_record? || foreign_key_present)
         if originating_collection = @owner.instance_variable_get(:@originating_collection)
-          #XXX STI classes seem to have trouble preloading associations -- need to look into this more.
           association_name = @reflection.name
-          if @owner.class.reflect_on_association(association_name)
-            @owner.class.__send__(:preload_associations, originating_collection, association_name)
-            return @target if loaded?
-          end
+          @owner.class.__send__(:preload_associations, originating_collection, association_name)
+          return @target if loaded?
         end
       end
       load_target_without_eager_preloading
@@ -131,7 +131,12 @@ module EagerRecord
     def find_using_scoped_preload(originating_collection, *args)
       options = args.extract_options!
       reflection_name = @reflection.name
-      current_scope = @reflection.options.merge(current_scoped_methods[:find])
+      current_scope = 
+        if current_scoped_methods && current_scoped_methods[:find] #XXX regression test
+          @reflection.options.merge(current_scoped_methods[:find])
+        else
+          @reflection.options
+        end
       owner_class = @owner.class
       reflection_class = @reflection.klass
       scope_key = current_scope.inspect
