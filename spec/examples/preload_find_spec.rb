@@ -16,4 +16,8 @@ describe 'collection find preloading' do
     fail_on_select
     @posts[1].comments.approved.should == [@comments[2]]
   end
+
+  it 'should use normal find if record did not originate in a collection' do
+    Post.first.comments.approved.should == [@comments[0]]
+  end
 end

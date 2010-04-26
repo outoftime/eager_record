@@ -3,34 +3,58 @@ require 'active_record'
 require 'digest'
 
 module EagerRecord
+  TEMPORARY_SCOPED_PRELOAD_ASSOCIATION = :"_temporary_association_for_scoped_preloading"
+
   class <<self
     def install
-      ActiveRecord::Base.module_eval { extend(EagerRecord::BaseExtensions) }
+      ActiveRecord::Base.module_eval do
+        extend(EagerRecord::BaseExtensions::ClassMethods)
+        include(EagerRecord::BaseExtensions::InstanceMethods)
+      end
       ActiveRecord::Associations::AssociationProxy.module_eval { include(EagerRecord::AssociationProxyExtensions) }
       ActiveRecord::Associations::AssociationCollection.module_eval { include(EagerRecord::AssociationCollectionExtensions) }
+      ActiveRecord::Associations::HasManyAssociation.module_eval { include(EagerRecord::HasManyAssociationExtensions) }
     end
   end
 
   module BaseExtensions
-    def self.extended(base)
-      (class <<base; self; end).module_eval do
-        alias_method_chain :find_by_sql, :eager_preloading
-      end
-      base.has_many :_temporary_association_for_scoped_preloading, :class_name => 'Object', :readonly => true
-    end
-
-    def find_by_sql_with_eager_preloading(*args)
-      collection = find_by_sql_without_eager_preloading(*args)
-      if collection.length > 1
-        collection.each do |record|
-          record.instance_variable_set(:@originating_collection, collection)
+    module ClassMethods
+      def self.extended(base)
+        (class <<base; self; end).module_eval do
+          alias_method_chain :find_by_sql, :eager_preloading
         end
       end
-      collection
+
+      def find_by_sql_with_eager_preloading(*args)
+        collection = find_by_sql_without_eager_preloading(*args)
+        if collection.length > 1
+          collection.each do |record|
+            record.instance_variable_set(:@originating_collection, collection)
+          end
+        end
+        collection
+      end
+    end
+
+    module InstanceMethods
+      def self.included(base)
+        base.has_many TEMPORARY_SCOPED_PRELOAD_ASSOCIATION, :readonly => true
+      end
+
+      private
+
+      def scoped_preloaded_associations
+        @scoped_preloaded_associations ||= Hash.new { |h, k| h[k] = {}}
+      end
+
+      def scoped_preloaded_associations_for(association_name)
+        scoped_preloaded_associations[association_name.to_sym]
+      end
     end
   end
 
   module AssociationProxyExtensions
+
     def self.included(base)
       base.module_eval do
         alias_method_chain :load_target, :eager_preloading
@@ -86,41 +110,56 @@ module EagerRecord
     end
 
     def find_with_eager_preloading(*args)
+      if originating_collection = @owner.instance_variable_get(:@originating_collection)
+        find_using_scoped_preload(originating_collection, *args)
+      else
+        find_without_eager_preloading(*args)
+      end
+    end
+
+    private
+
+    # 
+    # Subclasses can override this
+    #
+    def find_using_scoped_preload(originating_collection, *args)
+      find_without_eager_preloading(*args)
+    end
+  end
+
+  module HasManyAssociationExtensions
+    def find_using_scoped_preload(originating_collection, *args)
       options = args.extract_options!
-      options_digest = Digest::SHA1.hexdigest(options.inspect)[0..7]
-      association_name = :"_temporary_association_for_scoped_preloading"
       reflection_name = @reflection.name
       current_scope = @reflection.options.merge(current_scoped_methods[:find])
+      owner_class = @owner.class
+      reflection_class = @reflection.klass
       scope_key = current_scope.inspect
-      if scoped_preloaded_associations = @owner.instance_variable_get(:@scoped_preloaded_associations)
-        if preloaded_association = scoped_preloaded_associations[reflection_name][scope_key]
-          return preloaded_association
+      if preloaded_association = @owner.__send__(:scoped_preloaded_associations_for, reflection_name)[scope_key]
+        return preloaded_association
+      end
+      reflection = owner_class.__send__(
+        :create_has_many_reflection,
+        TEMPORARY_SCOPED_PRELOAD_ASSOCIATION,
+        current_scope.merge(
+          :class_name => reflection_class.name,
+          :readonly => true
+      )
+      )
+      originating_collection.each do |record|
+        association = ActiveRecord::Associations::HasManyAssociation.new(record, reflection)
+        record.__send__(:association_instance_set, TEMPORARY_SCOPED_PRELOAD_ASSOCIATION, association)
+      end
+      owner_class.__send__(:preload_has_many_association, originating_collection, reflection)
+      originating_collection.each do |record|
+        record.instance_eval do
+          @scoped_preloaded_associations ||= Hash.new { |h, k| h[k] = {} }
+          @scoped_preloaded_associations[reflection_name][scope_key] =
+            association_instance_get(TEMPORARY_SCOPED_PRELOAD_ASSOCIATION)
+          association_instance_set(TEMPORARY_SCOPED_PRELOAD_ASSOCIATION, nil)
         end
       end
-      if originating_collection = @owner.instance_variable_get(:@originating_collection)
-        reflection = @owner.class.__send__(
-          :create_has_many_reflection,
-          association_name,
-          current_scope.merge(
-            :class_name => @reflection.klass.name,
-            :readonly => true
-          )
-        )
-        originating_collection.each do |record|
-          association = ActiveRecord::Associations::HasManyAssociation.new(record, reflection)
-          record.__send__(:association_instance_set, association_name, association)
-        end
-        @owner.class.__send__(:preload_has_many_association, originating_collection, reflection)
-        originating_collection.each do |record|
-          record.instance_eval do
-            @scoped_preloaded_associations ||= Hash.new { |h, k| h[k] = {} }
-            @scoped_preloaded_associations[reflection_name][scope_key] =
-              association_instance_get(association_name)
-            association_instance_set(association_name, nil)
-          end
-        end
-      end
-      @owner.instance_variable_get(:@scoped_preloaded_associations)[reflection_name][scope_key]
+      @owner.__send__(:scoped_preloaded_associations_for, reflection_name)[scope_key]
     end
   end
 end
