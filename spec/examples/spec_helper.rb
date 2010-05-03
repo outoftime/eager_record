@@ -18,6 +18,7 @@ Spec::Runner.configure do |config|
     $stdout = $stderr = StringIO.new
     require File.join(File.dirname(__FILE__), '..', 'schema.rb')
     $stdout, $stderr = stdout, stderr
+    EagerRecord.use_scoped_preload = true
   end
 
   config.after :each do

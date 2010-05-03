@@ -23,6 +23,32 @@ Now you get the same effect with:
 In the first iteration of that loop, all the comments' users are loaded in a
 single SQL query.
 
+== Scoped Preloading
+
+It isn't enabled by default, but EagerRecord has experimental support for
+"scoped preloading". If you turn it on, EagerRecord will perform preloading
+on scoped associations in the same way that it does so for normal ones. For
+instance, let's say you've got a `:ham` named scope for your `Comment` class:
+
+  Post.all.each { |post| puts post.comments.ham.inspect }
+
+In the first iteration of this loop, EagerRecord will preload all of the ham
+comments for all of the posts in the collection; the above code will only
+generate two SQL queries. A couple of caveats:
+
+* This only works for normal `has_many` associations right now. I could add
+  support for other collection types in the future.
+* The code that does this is considerably more invasive in ActiveRecord's
+	internals than the regular eager preloading code. It basically has to trick
+  ActiveRecord into thinking that there is an association collection defined
+  on your model that doesn't actually exist, and then tell it to preload that
+	association. There are a couple of tests; so I know it basically works, but
+	beware that your mileage may vary. Because of this, you have to explicitly
+  tell eager record you want to use this feature (put this line in a file in
+	`config/initializers`:
+
+  EagerRecord.use_scoped_preload = true
+
 === Does it work with all association types?
 
 The test suite covers just about all of them; if you find one that doesn't work,

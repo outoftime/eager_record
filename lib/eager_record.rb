@@ -17,6 +17,14 @@ module EagerRecord
       ActiveRecord::Associations::AssociationCollection.module_eval { include(EagerRecord::AssociationCollectionExtensions) }
       ActiveRecord::Associations::HasManyAssociation.module_eval { include(EagerRecord::HasManyAssociationExtensions) }
     end
+
+    def use_scoped_preload=(flag)
+      @use_scoped_preload = flag
+    end
+
+    def use_scoped_preload?
+      !!@use_scoped_preload
+    end
   end
 
   module BaseExtensions
@@ -112,7 +120,7 @@ module EagerRecord
     end
 
     def find_with_eager_preloading(*args)
-      if originating_collection = @owner.instance_variable_get(:@originating_collection)
+      if EagerRecord.use_scoped_preload? && originating_collection = @owner.instance_variable_get(:@originating_collection)
         find_using_scoped_preload(originating_collection, *args)
       else
         find_without_eager_preloading(*args)
