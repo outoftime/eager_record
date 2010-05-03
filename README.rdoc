@@ -1,0 +1,45 @@
+= EagerRecord
+
+Never pass the `:include' option to `find` again.
+
+EagerRecord is a simple extension to ActiveRecord that automates the process
+of preloading associations in a result set. Each time ActiveRecord loads a
+collection of more than one record out of the database, a reference to the
+collection is stored in each record. Then, when you first access an association
+on one of those records; EagerRecord automatically preloads that association for
+all of the records in the collection.
+
+== Basic Usage
+
+There isn't really any usage; just install the gem and add it as a dependency.
+Whereas before you might write:
+
+  Comment.all(:include => :user).each { |comment| puts comment.user }
+
+Now you get the same effect with:
+
+  Comment.all.each { |comment| puts comment.user }
+
+In the first iteration of that loop, all the comments' users are loaded in a
+single SQL query.
+
+=== Does it work with all association types?
+
+The test suite covers just about all of them; if you find one that doesn't work,
+please file an issue.
+
+=== Do I need to make any changes to my code?
+
+EagerRecord doesn't add any new methods to ActiveRecord, so you don't need to
+interact with it directly. However, you might want to make adjustments to your
+code to encourage preloading to happen at the earliest possible point. In
+particular, if you're using `size` or `first` or `last`, on a collection,
+but then later on also working with all the members of that collection, you're
+better off calling `to_a` at the beginning so that preloading happens and
+ActiveRecord doesn't make extra SQL queries.
+
+== This is free software.
+
+The author(s) of this software relinqiush all copyright on it to the maximum
+extent permitted by law. Anyone is free to copy, distribute, mangle, sell,
+improve, destroy, heckle, hate, or love this software with no restrictions.

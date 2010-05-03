@@ -3,6 +3,8 @@ require 'active_record'
 require 'digest'
 
 module EagerRecord
+  autoload :VERSION, File.join(File.dirname(__FILE__), 'eager_record', 'version')
+
   TEMPORARY_SCOPED_PRELOAD_ASSOCIATION = :"_temporary_association_for_scoped_preloading"
 
   class <<self
