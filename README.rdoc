@@ -1,6 +1,6 @@
 = EagerRecord
 
-Never pass the `:include' option to `find` again.
+Never pass the `:include` option to `find` again.
 
 EagerRecord is a simple extension to ActiveRecord that automates the process
 of preloading associations in a result set. Each time ActiveRecord loads a
@@ -39,13 +39,13 @@ generate two SQL queries. A couple of caveats:
 * This only works for normal `has_many` associations right now. I could add
   support for other collection types in the future.
 * The code that does this is considerably more invasive in ActiveRecord's
-	internals than the regular eager preloading code. It basically has to trick
+  internals than the regular eager preloading code. It basically has to trick
   ActiveRecord into thinking that there is an association collection defined
   on your model that doesn't actually exist, and then tell it to preload that
-	association. There are a couple of tests; so I know it basically works, but
-	beware that your mileage may vary. Because of this, you have to explicitly
+  association. There are a couple of tests; so I know it basically works, but
+  beware that your mileage may vary. Because of this, you have to explicitly
   tell eager record you want to use this feature (put this line in a file in
-	`config/initializers`:
+  `config/initializers`:
 
   EagerRecord.use_scoped_preload = true
 
