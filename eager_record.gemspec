@@ -18,6 +18,6 @@ Gem::Specification.new do |s|
 
   s.add_development_dependency 'rspec'
   
-  s.files = Dir.glob('lib/**/*') + %w(README.rdoc History.txt)
+  s.files = Dir.glob('{rails,lib}/**/*') + %w(README.rdoc History.txt)
   s.require_path = 'lib'
 end
