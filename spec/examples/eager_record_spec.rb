@@ -40,6 +40,11 @@ describe EagerRecord do
       fail_on_select
       @posts.last.comments.should == []
     end
+
+    it 'should not query separately for the instance after preload' do
+      Comment.should_receive(:find_by_sql).once.and_return(@comments)
+      @posts[0].comments.to_a
+    end
   end
 
   describe 'with belongs_to' do
@@ -56,6 +61,11 @@ describe EagerRecord do
       @comments[0].post.inspect
       fail_on_select
       @comments.last.post.should be_nil
+    end
+
+    it 'should not query separately for the instance after preload' do
+      Post.should_receive(:find_by_sql).once.and_return(@posts)
+      @comments[0].post.inspect
     end
   end
 

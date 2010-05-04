@@ -1,4 +1,4 @@
-require 'rubygems'
+ 'rubygems'
 require 'active_record'
 require 'digest'
 
@@ -81,7 +81,12 @@ module EagerRecord
         if originating_collection = @owner.instance_variable_get(:@originating_collection)
           association_name = @reflection.name
           @owner.class.__send__(:preload_associations, originating_collection, association_name)
-          return @target if loaded?
+          new_association = @owner.__send__(:association_instance_get, association_name)
+          if new_association && __id__ != new_association.__id__ && new_association.loaded?
+            @target = new_association.target
+            @loaded = true
+            return
+          end
         end
       end
       load_target_without_eager_preloading
