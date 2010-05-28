@@ -47,7 +47,7 @@ generate two SQL queries. A couple of caveats:
   tell eager record you want to use this feature (put this line in a file in
   `config/initializers`:
 
-  EagerRecord.use_scoped_preload = true
+  EagerRecord::ScopedPreloading.install
 
 === Does it work with all association types?
 
