@@ -49,10 +49,23 @@ generate two SQL queries. A couple of caveats:
 
   EagerRecord::ScopedPreloading.install
 
+	As an alternative to using this functionality, consider defining extra scoped
+	associations with `:readonly => true` as needed.
+
 === Does it work with all association types?
+
+==== Mostly...
 
 The test suite covers just about all of them; if you find one that doesn't work,
 please file an issue.
+
+==== Except!
+
+There's a bug in ActiveRecord's preloading that causes it to build an invalid
+query when preloading a `has_many :through` association that defines a
+`:conditions` option that references the join table. For that reason,
+EagerRecord does not attempt to eagerly load `has_many :through` associations
+that have a `:conditions` option.
 
 === Do I need to make any changes to my code?
 

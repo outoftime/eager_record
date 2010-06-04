@@ -6,8 +6,8 @@ describe EagerRecord do
       blog = Blog.create!
       2.times do
         post = blog.posts.create!
-        2.times { post.comments.create! }
         2.times { post.users.create! }
+        2.times { post.comments.create! { |comment| comment.user = post.users.first }}
         2.times { post.assets << Photo.create!(:post_id => post.id) }
         2.times { post.assets << Video.create!(:post_id => post.id) }
       end
@@ -104,6 +104,22 @@ describe EagerRecord do
   describe 'collection with STI' do
     it 'should eager-load associated instances without error' do
       lambda { @assets[0].post }.should_not raise_error
+    end
+  end
+
+  # 
+  # There is a bug in ActiveRecord which causes has-many through associations
+  # with conditions that reference columns in the joining table to fail, because
+  # AR does not include the appropriate join in the query. The least-bad option
+  # is just to avoid automatic preloading on associations are has_many :through
+  # with conditions.
+  #
+  describe 'has_many :through associations with conditions' do
+    it 'should eager-load associations without error' do
+      Comment.update_all(:approved => true)
+      post = Post.all.first
+      user = post.users.first
+      Post.all.first.approved_commenters.should == [user, user]
     end
   end
 end

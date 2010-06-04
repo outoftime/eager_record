@@ -65,7 +65,7 @@ module EagerRecord
       end
   
       def load_target_with_eager_preloading
-        if !@owner.new_record? || foreign_key_present
+        if @reflection.options[:conditions].nil? && (!@owner.new_record? || foreign_key_present)
           if !loaded?
             if originating_collection = @owner.instance_variable_get(:@originating_collection)
               @owner.class.__send__(:preload_associations, originating_collection, @reflection.name)

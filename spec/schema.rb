@@ -6,6 +6,7 @@ ActiveRecord::Schema.define do
   end
   create_table :comments, :force => true do |t|
     t.references :post
+    t.references :user
     t.boolean :approved, :null => false, :default => false
   end
   create_table :users, :force => true do |t|
