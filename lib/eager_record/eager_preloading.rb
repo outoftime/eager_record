@@ -23,7 +23,7 @@ module EagerRecord
         grouped_collections.values.each do |grouped_collection|
           if grouped_collection.length > 1
             grouped_collection.each do |record|
-              record.instance_variable_set(:@originating_collection, grouped_collection)
+              record.instance_variable_set(:@originating_collection, Unmarshallable.new(grouped_collection))
             end
           end
         end

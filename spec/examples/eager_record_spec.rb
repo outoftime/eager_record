@@ -122,4 +122,11 @@ describe EagerRecord do
       Post.all.first.approved_commenters.should == [user, user]
     end
   end
+
+  describe 'serialization and deserialization' do
+    it 'should not seralize originating collection' do
+      post = Marshal.load(Marshal.dump(Post.all.first))
+      post.instance_variable_get(:@originating_collection).should be_nil
+    end
+  end
 end
