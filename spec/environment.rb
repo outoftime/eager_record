@@ -11,6 +11,7 @@ ActiveRecord::Base.establish_connection(
   :database => File.join(File.dirname(__FILE__), 'test.db')
 )
 
+require 'logger'
 ActiveRecord::Base.logger = Logger.new(File.join(File.dirname(__FILE__), 'test.log'))
 
 require File.join(File.dirname(__FILE__), '..', 'lib', 'eager_record')

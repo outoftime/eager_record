@@ -41,15 +41,17 @@ module EagerRecord
       def load_target_with_eager_preloading
         return nil unless defined?(@loaded)
 
-        if !loaded? and (!@owner.new_record? || foreign_key_present)
-          if originating_collection = @owner.instance_variable_get(:@originating_collection)
-            association_name = @reflection.name
-            @owner.class.__send__(:preload_associations, originating_collection, association_name)
-            new_association = @owner.__send__(:association_instance_get, association_name)
-            if new_association && __id__ != new_association.__id__ && new_association.loaded?
-              @target = new_association.target
-              @loaded = true
-              return
+        if @owner.read_attribute(@reflection.primary_key_name)
+          if !loaded? and (!@owner.new_record? || foreign_key_present)
+            if originating_collection = @owner.instance_variable_get(:@originating_collection)
+              association_name = @reflection.name
+              @owner.class.__send__(:preload_associations, originating_collection, association_name)
+              new_association = @owner.__send__(:association_instance_get, association_name)
+              if new_association && __id__ != new_association.__id__ && new_association.loaded?
+                @target = new_association.target
+                @loaded = true
+                return
+              end
             end
           end
         end
