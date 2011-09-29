@@ -1,16 +1,10 @@
 require File.join(File.dirname(__FILE__), '..', 'environment')
 
-begin
-  require 'spec'
-rescue LoadError => e
-  if require 'rubygems' then retry
-  else raise(e)
-  end
-end
+require 'rspec'
 
 require File.join(File.dirname(__FILE__), '..', 'support', 'helpers')
 
-Spec::Runner.configure do |config|
+RSpec.configure do |config|
   config.include(EagerRecord::SpecHelpers)
 
   config.before :all do
