@@ -16,7 +16,9 @@ Gem::Specification.new do |s|
   s.description = %q(EagerRecord extends ActiveRecord to automate association preloading. Each time a collection of more than one record is loaded from the database, each record remembers the collection that it is part of; then when one of those records has an association accessed, EagerRecord triggers a preload_associations for all the records in the originating collection. Never worry about that :include option again!)
   s.rubyforge_project = 'eager_record'
 
+  s.add_dependency 'activerecord', '~> 2.3.0'
   s.add_development_dependency 'rspec'
+  s.add_development_dependency 'sqlite3-ruby'
   
   s.files = Dir.glob('{rails,lib}/**/*') + %w(README.rdoc History.txt)
   s.require_path = 'lib'
