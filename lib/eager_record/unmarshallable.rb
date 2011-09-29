@@ -6,7 +6,7 @@ module EagerRecord
   #
   class Unmarshallable
     instance_methods.each do |method|
-      undef_method(method) unless method =~ /__.+__/ || method.to_sym == :respond_to?
+      undef_method(method) unless method =~ /__.+__/ || method.to_sym == :respond_to? || method.to_sym == :object_id
     end
 
     class <<self
