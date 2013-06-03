@@ -123,6 +123,19 @@ describe EagerRecord do
     end
   end
 
+  #
+  # Has-many and has-many-through associations with :finder_sql generate
+  # incorrect SQL, because eager_record assumes the wrong (or even
+  # non-existing) foreign key. We avoid automatic preloading of these.
+  #
+  describe 'has_many associations with :finder_sql' do
+    it 'should not eagerly load' do
+      post = Post.all.first
+      user = post.users.first
+      Post.all.first.unapproved_commenters.should == [user, user]
+    end
+  end
+
   describe 'serialization and deserialization' do
     it 'should not seralize originating collection' do
       post = Marshal.load(Marshal.dump(Post.all.first))

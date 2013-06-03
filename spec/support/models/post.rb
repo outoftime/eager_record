@@ -8,4 +8,11 @@ class Post < ActiveRecord::Base
            :conditions => { 'comments.approved' => true },
            :readonly => true,
            :source => :user
+  has_many :unapproved_commenters,
+           :class_name => 'User',
+           :finder_sql => %q{
+             SELECT users.* FROM comments
+             INNER JOIN users ON (users.id = comments.user_id)
+             WHERE comments.post_id = #{id} AND comments.approved = 'f'
+           }
 end
