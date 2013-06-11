@@ -20,4 +20,11 @@ ActiveRecord::Schema.define do
     t.references :post
     t.string :type
   end
+  create_table :groups, :force => true do |t|
+    t.datetime :active_at
+  end
+  create_table :groupings, :force => true do |t|
+    t.references :user
+    t.references :group
+  end
 end

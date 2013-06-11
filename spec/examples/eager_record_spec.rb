@@ -17,6 +17,11 @@ describe EagerRecord do
     @comments = Comment.all
     @users = User.all
     @assets = Asset.all
+
+    Grouping.create(
+      :user => @posts.first.users.first,
+      :group => Group.create(:active_at => DateTime.now)
+    )
   end
 
   describe 'with has_many' do
@@ -133,6 +138,12 @@ describe EagerRecord do
       post = Post.all.first
       user = post.users.first
       Post.all.first.unapproved_commenters.should == [user, user]
+    end
+  end
+
+  describe 'has_many :through associations with :order' do
+    it 'should not generate invalid query' do
+      User.all.flat_map(&:groups).should == [Group.all.first]
     end
   end
 
