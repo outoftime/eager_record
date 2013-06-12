@@ -1,10 +1,12 @@
 begin
-  require 'active_record'
+  require 'bundler'
 rescue LoadError => e
   if require 'rubygems' then retry
   else raise(e)
   end
 end
+
+Bundler.require(:default, :development)
 
 ActiveRecord::Base.establish_connection(
   :adapter => 'sqlite3',
