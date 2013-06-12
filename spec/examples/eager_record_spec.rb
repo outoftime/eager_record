@@ -143,7 +143,7 @@ describe EagerRecord do
 
   describe 'has_many :through associations with :order' do
     it 'should not generate invalid query' do
-      User.all.flat_map(&:groups).should == [Group.all.first]
+      User.all.map(&:groups).flatten.should == [Group.all.first]
     end
   end
 
