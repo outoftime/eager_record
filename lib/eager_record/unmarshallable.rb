@@ -1,5 +1,5 @@
 module EagerRecord
-  # 
+  #
   # A wrapper for objects that we don't want to marshal. In particular, used
   # to wrap the @originating_collection array that is created in model instances
   # since marshalling that seems a bad idea.
@@ -23,8 +23,8 @@ module EagerRecord
       @underlying.__send__(method, *args, &block)
     end
 
-    def respond_to?(method)
-      super || @underlying.respond_to?(method)
+    def respond_to?(method, include_private = false)
+      super || @underlying.respond_to?(method, include_private)
     end
 
     def _dump(depth)

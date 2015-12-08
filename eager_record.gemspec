@@ -18,7 +18,7 @@ Gem::Specification.new do |s|
 
   s.add_dependency 'activerecord', '~> 2.3.0'
   s.add_development_dependency 'rspec'
-  s.add_development_dependency 'sqlite3-ruby'
+  s.add_development_dependency 'sqlite3'
   
   s.files = Dir.glob('{rails,lib}/**/*') + %w(README.rdoc History.txt)
   s.require_path = 'lib'

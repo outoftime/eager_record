@@ -7,6 +7,14 @@ require File.join(File.dirname(__FILE__), '..', 'support', 'helpers')
 RSpec.configure do |config|
   config.include(EagerRecord::SpecHelpers)
 
+  config.expect_with(:rspec) do |c|
+    c.syntax = :should
+  end
+
+  config.mock_with(:rspec) do |c|
+    c.syntax = :should
+  end
+
   config.before :all do
     stdout, stderr = $stdout, $stderr
     $stdout = $stderr = StringIO.new
